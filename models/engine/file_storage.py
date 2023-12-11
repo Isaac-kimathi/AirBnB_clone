@@ -1,7 +1,6 @@
 #!/usr/bin/bash
 """module for fileStorage class."""
 import json
-import os
 
 class FileStorage:
     """class serializes and deserializes instances a Json file & viceversa"""
@@ -19,23 +18,28 @@ class FileStorage:
 
     def save(self):
         """Serializes __objects to the JSON file (path: __file_path)"""
-        dict_obj = {}
-        for key, obj in self.__objects.item():
-            dict_obj[key] = obj.to_dict()
+        dicts_obj = {}
+        for key, obj in self.__objects.items():
+            dicts_obj[key] = obj.to_dict()
+        with open(self.__file_path, 'w') as file:
+            json.dump(dicts_obj, file)
 
-        with open(self.__file_path, "w", encoding="utf-8") as file:
-            json.dump(obj_dict, file)
+    def classes(self):
+        """Returns a dic of valid classes and their references"""
+        from models.base_model import BaseModel
+
+        classes = { "BaseModel": BaseModel}
+        return classes
 
     def reload(self):
         """deserializes the JSON file to __objects"""
-        if not os.path.isfile(self.__file_path):
-            return
-        with open(self.__file_path, 'r', encoding="utf-8") as file:
-            ld_objs = json.load(file)
-
-        for key, dict_obj in ld_objs.items():
-            class_name, obj_id = key.split('.')
-            module = FileStorage
-            class_ = getattr(module, class_name)
-            obj = class_(**obj_dict)
-            self.__objects[key] = obj
+        try:
+            with open(self.__file_path, 'r') as file:
+                dict_obj = json.load(file)
+                dict_obj = {k: self.classes()[v["__class__"]](**v)
+                            for k, v in dict_obj.items()}
+                self.__objects = dict_obj
+        except FileNotFoundError:
+            dict_obj = {}
+        except json.JSONDecodeError:
+            dict_obj = {}
