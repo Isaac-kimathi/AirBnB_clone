@@ -13,7 +13,7 @@ class FileStorage:
 
     def new(self, obj):
         """set in __objects the obj with key <obj class name>.id"""
-        key = f"{obj.__class__.__name__}.{obj.id}"
+        key = "{}.{}".format(type(obj).__name__, obj.id)
         FileStorage.__objects[key] = obj
 
     def save(self):
@@ -27,8 +27,11 @@ class FileStorage:
     def classes(self):
         """Returns a dic of valid classes and their references"""
         from models.base_model import BaseModel
+        from models.user import User
 
-        classes = { "BaseModel": BaseModel}
+        classes = { "BaseModel": BaseModel,
+                    "User": User,
+                    }
         return classes
 
     def reload(self):
